@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PDF Presenter</title>
+<style>
+:root{--bg:#f3f1ec;--panel:#fff;--text:#1d1d1b;--muted:#6b6a65;--accent:#d9541e;--line:#dcd9d1;--stage:#1a1a19;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--panel:#222220;--text:#efede6;--muted:#9a988f;--line:#383733;--stage:#0c0c0b}}
+:root[data-theme="dark"]{--bg:#161615;--panel:#222220;--text:#efede6;--muted:#9a988f;--line:#383733;--stage:#0c0c0b}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0}
+h1{font-size:16px;margin:0 8px 0 0;letter-spacing:.2px}
+button,select,.file{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:0 12px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;outline:none;margin:0}
+button:hover,select:hover,.file:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,.file:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+label:not(.file){height:34px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.4;cursor:default}
+label{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px}
+input[type=range]{accent-color:var(--accent);width:90px}
+input[type=file]{display:none}
+.spacer{flex:1}
+#count{font-variant-numeric:tabular-nums;color:var(--muted);min-width:70px;text-align:center}
+#stage{flex:1;position:relative;background:var(--stage);overflow:hidden;perspective:1600px;min-height:0}
+#stage canvas{position:absolute;inset:0;margin:auto;background:#fff;border:0;border-radius:3px;box-shadow:0 4px 24px rgba(0,0,0,.4);backface-visibility:hidden;display:block}
+#stage:fullscreen canvas{border-radius:0;box-shadow:none}
+#drop{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#bdbab0;text-align:center;padding:20px;pointer-events:none}
+#drop b{font-size:20px;color:#efede6}
+#stage.drag{box-shadow:inset 0 0 0 3px var(--accent)}
+#stage:fullscreen{cursor:none}
+#stage:fullscreen.show{cursor:default}
+#hud{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:none;gap:8px;background:rgba(0,0,0,.65);padding:8px 12px;border-radius:999px;z-index:5;color:#fff;align-items:center}
+#hud button{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+#stage:fullscreen.show #hud{display:flex}
+/* text-fit fixes */
+button,select,.file,label{white-space:nowrap;line-height:1.2}
+button,select,.file{height:auto;min-height:34px;padding:6px 12px}
+select{max-width:100%;padding-right:8px;text-overflow:ellipsis}
+#count{white-space:nowrap}
+#drop{overflow:hidden;font-size:clamp(12px,3.2vw,15px)}
+#drop b{font-size:clamp(16px,5vw,22px);overflow-wrap:anywhere}
+#drop span{max-width:min(90%,520px);overflow-wrap:anywhere}
+#hud{max-width:94%;white-space:nowrap}
+#c3{z-index:3;visibility:hidden}
+</style>
+</head>
+<body>
+<header>
+  <h1>PDF Presenter</h1>
+  <label class="file" id="openBtn">Open PDF<input type="file" id="file" accept="application/pdf"></label>
+  <button id="prev" disabled>←</button>
+  <span id="count">– / –</span>
+  <button id="next" disabled>→</button>
+  <label>Transition
+    <select id="tr">
+      <optgroup label="Subtle">
+        <option value="cut">Cut</option>
+        <option value="fade" selected>Fade</option>
+        <option value="push">Push</option>
+        <option value="wipe">Wipe</option>
+        <option value="split">Split</option>
+        <option value="uncover">Uncover</option>
+        <option value="cover">Cover</option>
+        <option value="bars">Random Bars</option>
+        <option value="circle">Shape: Circle</option>
+        <option value="diamond">Shape: Diamond</option>
+        <option value="plus">Shape: Plus</option>
+        <option value="flash">Flash</option>
+      </optgroup>
+      <optgroup label="Exciting">
+        <option value="blinds">Blinds</option>
+        <option value="clock">Clock</option>
+        <option value="zoom">Zoom</option>
+        <option value="flip">Flip</option>
+        <option value="cube">Cube</option>
+        <option value="box">Box</option>
+        <option value="gallery">Gallery</option>
+        <option value="switch">Switch</option>
+        <option value="fly">Fly Through</option>
+        <option value="fall">Fall Over</option>
+        <option value="ferris">Ferris Wheel</option>
+      </optgroup>
+      <optgroup label="More PowerPoint effects">
+        <option value="blindsv">Blinds (vertical)</option>
+        <option value="dissolve">Dissolve</option>
+        <option value="checker">Checkerboard</option>
+        <option value="doors">Doors</option>
+        <option value="drape">Drape</option>
+        <option value="shred">Shred</option>
+        <option value="wind">Wind</option>
+        <option value="fracture">Fracture</option>
+        <option value="ripple">Ripple</option>
+        <option value="vortex">Vortex</option>
+        <option value="origami">Origami</option>
+        <option value="airplane">Airplane</option>
+        <option value="reveal">Reveal</option>
+      </optgroup>
+      <option value="json" id="jsonOpt" hidden>Per slide (from JSON)</option>
+      <option value="random">Random</option>
+    </select>
+  </label>
+  <label>Speed <input type="range" id="dur" min="150" max="1500" value="600" step="50"></label>
+  <label class="file" id="jbtn"><span id="jtxt">Load transitions JSON</span><input type="file" id="jfile" accept="application/json,.json"></label>
+  <label>Auto <select id="auto"><option value="0">Off</option><option value="3">3s</option><option value="5">5s</option><option value="10">10s</option></select></label>
+  <span class="spacer"></span>
+  <button class="primary" id="present" disabled>▶ Present</button>
+</header>
+<div id="stage">
+  <canvas id="c1"></canvas><canvas id="c2" style="visibility:hidden"></canvas><canvas id="c3"></canvas>
+  <div id="drop"><b>Drop a PDF here</b><span>or use Open PDF. Arrow keys / click / swipe to navigate. F to present.</span></div>
+  <div id="hud"><button id="hPrev">←</button><span id="hCount">1 / 1</span><button id="hNext">→</button><button id="hExit">✕</button></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const $ = id => document.getElementById(id);
+const stage = $("stage");
+let doc = null, cur = 1, total = 0, busy = false, front = $("c1"), back = $("c2"), timer = null, hudT = null;
+
+async function renderTo(canvas, n) {
+  const page = await doc.getPage(n);
+  const base = page.getViewport({ scale: 1 });
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const fs = !!document.fullscreenElement, pad = fs ? 0 : 20;
+  const s = Math.min((w - pad) / base.width, (h - pad) / base.height);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const vp = page.getViewport({ scale: s * dpr });
+  canvas.width = vp.width; canvas.height = vp.height;
+  canvas.style.width = vp.width / dpr + "px";
+  canvas.style.height = vp.height / dpr + "px";
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+}
+
+function updateUI() {
+  const t = cur + " / " + total;
+  $("count").textContent = t; $("hCount").textContent = t;
+  $("prev").disabled = cur <= 1; $("next").disabled = cur >= total;
+}
+
+async function load(file) {
+  try {
+    const data = new Uint8Array(await file.arrayBuffer());
+    doc = await pdfjsLib.getDocument({ data }).promise;
+    total = doc.numPages; cur = 1;
+    $("drop").style.display = "none";
+    $("present").disabled = false;
+    front.style.visibility = "visible"; back.style.visibility = "hidden";
+    await renderTo(front, 1); updateUI(); resetAuto();
+  } catch (e) { alert("Couldn’t open that PDF."); console.error(e); }
+}
+
+const E = "cubic-bezier(.65,0,.35,1)";
+const RANDOM = ["fade","push","wipe","split","uncover","cover","bars","circle","diamond","plus","blinds","clock","zoom","flip","cube","box","gallery","switch","fly","fall","ferris"];
+
+// polygon of n parallel bars, each p% thick (disjoint bars joined along the box edge so they animate)
+const barsPoly = (n, p, vertical) => {
+  const s = 100 / n, pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = i * s, b = a + p;
+    pts.push(vertical ? `${a}% 0%,${a}% 100%,${b}% 100%,${b}% 0%` : `0% ${a}%,100% ${a}%,100% ${b}%,0% ${b}%`);
+  }
+  return `polygon(${pts.join(",")})`;
+};
+const plusPoly = (s, w) => `polygon(${[[-w,-s],[w,-s],[w,-w],[s,-w],[s,w],[w,w],[w,s],[-w,s],[-w,w],[-s,w],[-s,-w],[-w,-w]].map(([x,y]) => `${50+x}% ${50+y}%`).join(",")})`;
+const wedge = a => {
+  const pts = ["50% 50%"];
+  for (let k = 0; k <= 16; k++) { const t = a * k / 16 * 2 * Math.PI; pts.push(`${50 + 100 * Math.sin(t)}% ${50 - 100 * Math.cos(t)}%`); }
+  return `polygon(${pts.join(",")})`;
+};
+
+// PowerPoint-style transitions. out = leaving slide, inn = entering slide.
+function plan(type, dir, cw) {
+  const W = stage.clientWidth * dir, z = cw / 2, still = [{ transform: "none" }, { transform: "none" }];
+  const reveal = (a, b) => ({ out: still, inn: [{ clipPath: a }, { clipPath: b }] });
+  switch (type) {
+    case "fade":    return { out: [{ opacity: 1 }, { opacity: 0 }], inn: [{ opacity: 0 }, { opacity: 1 }] };
+    case "push":    return { out: [{ transform: "translateX(0)" }, { transform: `translateX(${-W}px)` }], inn: [{ transform: `translateX(${W}px)` }, { transform: "translateX(0)" }] };
+    case "cover":   return { out: still, inn: [{ transform: `translateX(${W}px)` }, { transform: "translateX(0)" }] };
+    case "uncover": return { out: [{ transform: "translateX(0)" }, { transform: `translateX(${-W}px)` }], inn: still, outTop: true };
+    case "wipe":    return dir > 0 ? reveal("inset(0% 100% 0% 0%)", "inset(0% 0% 0% 0%)") : reveal("inset(0% 0% 0% 100%)", "inset(0% 0% 0% 0%)");
+    case "split":   return reveal("inset(0% 50% 0% 50%)", "inset(0% 0% 0% 0%)");
+    case "bars":    return reveal(barsPoly(12, 0, true), barsPoly(12, 8.4, true));
+    case "blinds":  return reveal(barsPoly(8, 0, false), barsPoly(8, 12.6, false));
+    case "circle":  return reveal("circle(0% at 50% 50%)", "circle(75% at 50% 50%)");
+    case "diamond": return reveal("polygon(50% 50%,50% 50%,50% 50%,50% 50%)", "polygon(50% -55%,155% 50%,50% 155%,-55% 50%)");
+    case "plus":    return reveal(plusPoly(0, 0), plusPoly(75, 60));
+    case "clock":   return { out: still, inn: Array.from({ length: 17 }, (_, i) => ({ clipPath: wedge(dir > 0 ? i / 16 : 0.0001 + i / 16) })), lin: true };
+    case "flash":   return { out: [{ filter: "brightness(1)", opacity: 1 }, { filter: "brightness(8)", opacity: 1, offset: .4 }, { filter: "brightness(8)", opacity: 0 }], inn: [{ opacity: 0 }, { opacity: 0, offset: .4 }, { opacity: 1 }], lin: true };
+    case "blindsv": return reveal(barsPoly(10, 0, true), barsPoly(10, 10.2, true));
+    case "reveal":  { const to = `${dir > 0 ? "0%" : "100%"} 50%`; return { out: [{ transform: "translateX(0) rotateY(0)", transformOrigin: to }, { transform: `translateX(${-W * .9}px) rotateY(${-55 * dir}deg)`, transformOrigin: to }], inn: still, outTop: true }; }
+    case "airplane": return { out: [{ transform: "translate(0,0) rotateZ(0) rotateY(0) scale(1)", opacity: 1 }, { transform: `translate(${W * .9}px,${-stage.clientHeight * .9}px) rotateZ(${25 * dir}deg) rotateY(${70 * dir}deg) scale(.15)`, opacity: 0 }], inn: still, outTop: true, ease: "cubic-bezier(.5,0,1,.6)" };
+    case "zoom":    return { out: [{ opacity: 1 }, { opacity: 0 }], inn: [{ transform: "scale(.05)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }] };
+    case "flip":    return { out: [{ transform: "rotateY(0)" }, { transform: `rotateY(${-180 * dir}deg)` }], inn: [{ transform: `rotateY(${180 * dir}deg)` }, { transform: "rotateY(0)" }] };
+    case "cube": {
+      const to = `50% 50% ${-z}px`;
+      return { out: [{ transform: "rotateY(0)", transformOrigin: to }, { transform: `rotateY(${-90 * dir}deg)`, transformOrigin: to }], inn: [{ transform: `rotateY(${90 * dir}deg)`, transformOrigin: to }, { transform: "rotateY(0)", transformOrigin: to }] };
+    }
+    case "box": {
+      const to = `50% 50% ${z}px`;
+      return { out: [{ transform: "rotateY(0)", transformOrigin: to }, { transform: `rotateY(${90 * dir}deg)`, transformOrigin: to }], inn: [{ transform: `rotateY(${-90 * dir}deg)`, transformOrigin: to }, { transform: "rotateY(0)", transformOrigin: to }] };
+    }
+    case "gallery": return {
+      out: [{ transform: "translateX(0) rotateY(0) scale(1)", opacity: 1 }, { transform: `translateX(${-W * .8}px) rotateY(${35 * dir}deg) scale(.6)`, opacity: 0 }],
+      inn: [{ transform: `translateX(${W * .8}px) rotateY(${-35 * dir}deg) scale(.6)`, opacity: 0 }, { transform: "translateX(0) rotateY(0) scale(1)", opacity: 1 }] };
+    case "switch": return {
+      out: [{ transform: "translate3d(0,0,0)", opacity: 1 }, { transform: `translate3d(${-W * .55}px,0,-500px)`, opacity: 1, offset: .5 }, { transform: "translate3d(0,0,-500px)", opacity: 0 }],
+      inn: [{ transform: "translate3d(0,0,-500px)", opacity: 0 }, { transform: `translate3d(${W * .55}px,0,-500px)`, opacity: 1, offset: .5 }, { transform: "translate3d(0,0,0)", opacity: 1 }] };
+    case "fly":    return { out: [{ transform: "translateZ(0)", opacity: 1 }, { transform: "translateZ(1000px)", opacity: 0 }], inn: [{ transform: "translateZ(-1000px)", opacity: 0 }, { transform: "translateZ(0)", opacity: 1 }], outTop: true };
+    case "fall": {
+      const to = dir > 0 ? "0% 100%" : "100% 100%";
+      return { out: [{ transform: "rotate(0)", transformOrigin: to, opacity: 1 }, { transform: `rotate(${90 * dir}deg)`, transformOrigin: to, opacity: 0 }], inn: still, outTop: true, ease: "cubic-bezier(.6,0,.9,.6)" };
+    }
+    case "ferris": {
+      const to = "50% 260%";
+      return { out: [{ transform: "rotate(0)", transformOrigin: to, opacity: 1 }, { transform: `rotate(${-35 * dir}deg)`, transformOrigin: to, opacity: 0 }], inn: [{ transform: `rotate(${35 * dir}deg)`, transformOrigin: to, opacity: 0 }, { transform: "rotate(0)", transformOrigin: to, opacity: 1 }] };
+    }
+  }
+  return null; // cut
+}
+
+// ---- canvas-driven effects (pixel-level), drawn on overlay canvas c3 ----
+const fx = $("c3");
+const cl = x => Math.max(0, Math.min(1, x));
+const ez = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const FX = {
+  dissolve(g, A, B, t, w, h, s) {
+    const n = 48, cw = w / n, rows = Math.ceil(h / cw);
+    s.r = s.r || Array.from({ length: n * rows }, Math.random);
+    g.drawImage(A, 0, 0);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < n; i++) if (s.r[j * n + i] < t) g.drawImage(B, i * cw, j * cw, cw + 1, cw + 1, i * cw, j * cw, cw + 1, cw + 1);
+  },
+  checker(g, A, B, t, w, h) {
+    const n = 10, cw = w / n, rows = Math.ceil(h / cw);
+    g.drawImage(A, 0, 0);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < n; i++) {
+      const p = cl((t - ((i + j) % 2 ? .5 : 0)) / .5);
+      if (p > 0) g.drawImage(B, i * cw, j * cw, cw * p + 1, cw + 1, i * cw, j * cw, cw * p + 1, cw + 1);
+    }
+  },
+  doors(g, A, B, t, w, h, s, o) {
+    g.drawImage(B, 0, 0);
+    const k = 1 - ez(t), hw = w / 2, hh = h / 2;
+    if (k <= 0) return;
+    if (o && o.dir === "horz") {
+      g.drawImage(A, 0, 0, w, hh, 0, 0, w, hh * k);
+      g.drawImage(A, 0, hh, w, hh, 0, h - hh * k, w, hh * k);
+    } else {
+      g.drawImage(A, 0, 0, hw, h, 0, 0, hw * k, h);
+      g.drawImage(A, hw, 0, hw, h, w - hw * k, 0, hw * k, h);
+    }
+  },
+  drape(g, A, B, t, w, h) {
+    g.drawImage(B, 0, 0);
+    const n = 24, sw = w / n;
+    for (let i = 0; i < n; i++) { const p = cl((t - i / n * .5) / .5); g.drawImage(A, i * sw, 0, sw + 1, h, i * sw, p * p * h, sw + 1, h); }
+  },
+  shred(g, A, B, t, w, h) {
+    g.drawImage(B, 0, 0);
+    const n = 16, sw = w / n, e = ez(t);
+    for (let i = 0; i < n; i++) g.drawImage(A, i * sw, 0, sw + 1, h, i * sw, (i % 2 ? 1 : -1) * e * h * 1.05, sw + 1, h);
+  },
+  wind(g, A, B, t, w, h, s) {
+    const n = 20, sh = h / n;
+    s.d = s.d || Array.from({ length: n }, () => Math.random() * .5);
+    g.drawImage(B, 0, 0);
+    for (let i = 0; i < n; i++) {
+      const p = cl((t - s.d[i]) / .5);
+      g.globalAlpha = 1 - p * .6;
+      g.drawImage(A, 0, i * sh, w, sh + 1, -p * p * w * s.dir, i * sh, w, sh + 1);
+    }
+    g.globalAlpha = 1;
+  },
+  fracture(g, A, B, t, w, h, s) {
+    g.drawImage(B, 0, 0);
+    const cx = 6, cy = 4, cw = w / cx, ch = h / cy, e = ez(t);
+    s.r = s.r || Array.from({ length: cx * cy }, () => Math.random() * 2 - 1);
+    for (let j = 0; j < cy; j++) for (let i = 0; i < cx; i++) {
+      const x = i * cw, y = j * ch, mx = x + cw / 2 - w / 2, my = y + ch / 2 - h / 2;
+      g.save(); g.globalAlpha = 1 - t * t;
+      g.translate(x + cw / 2 + mx * e * 1.2, y + ch / 2 + my * e * 1.2 + e * e * h * .3);
+      g.rotate(s.r[j * cx + i] * e * 1.2);
+      g.drawImage(A, x, y, cw + 1, ch + 1, -cw / 2, -ch / 2, cw + 1, ch + 1);
+      g.restore();
+    }
+  },
+  ripple(g, A, B, t, w, h) {
+    g.drawImage(A, 0, 0);
+    const R = Math.hypot(w, h) / 2 * 1.05 * ez(t);
+    g.save(); g.beginPath(); g.arc(w / 2, h / 2, R, 0, 7); g.clip(); g.drawImage(B, 0, 0); g.restore();
+    g.lineWidth = Math.max(2, w / 300); g.strokeStyle = "#fff";
+    for (let k = 0; k < 4; k++) { const r = R - k * w / 40; if (r > 0) { g.globalAlpha = (1 - k * .25) * (1 - t * t); g.beginPath(); g.arc(w / 2, h / 2, r, 0, 7); g.stroke(); } }
+    g.globalAlpha = 1;
+  },
+  vortex(g, A, B, t, w, h, s) {
+    g.drawImage(A, 0, 0);
+    const cx = 8, cy = 5, cw = w / cx, ch = h / cy, md = Math.hypot(cx / 2, cy / 2);
+    for (let j = 0; j < cy; j++) for (let i = 0; i < cx; i++) {
+      const d = Math.hypot(i + .5 - cx / 2, j + .5 - cy / 2) / md, p = cl(t * 1.7 - d * .7);
+      if (p <= 0) continue;
+      g.save(); g.translate(i * cw + cw / 2, j * ch + ch / 2); g.rotate((1 - p) * Math.PI * 2 * s.dir); g.scale(p, p);
+      g.drawImage(B, i * cw, j * ch, cw + 1, ch + 1, -cw / 2, -ch / 2, cw + 1, ch + 1);
+      g.restore();
+    }
+  },
+  origami(g, A, B, t, w, h) {
+    g.drawImage(B, 0, 0);
+    const n = 4, sw = w / n, k = 1 - ez(t);
+    if (k <= 0) return;
+    for (let i = 0; i < n; i++) {
+      const dw = sw * k, dx = i % 2 ? i * sw + sw - dw : i * sw;
+      g.drawImage(A, i * sw, 0, sw + 1, h, dx, 0, dw, h);
+      g.fillStyle = `rgba(0,0,0,${.4 * (1 - k)})`; g.fillRect(dx, 0, dw, h);
+    }
+  }
+};
+RANDOM.push("dissolve", "checker", "doors", "drape", "shred", "wind", "fracture", "ripple", "vortex", "origami", "airplane", "reveal", "blindsv");
+
+function runFx(type, dir, dur, o) {
+  return new Promise(res => {
+    const g = fx.getContext("2d"), w = back.width, h = back.height, s = { dir }, t0 = performance.now();
+    fx.width = w; fx.height = h; fx.style.width = back.style.width; fx.style.height = back.style.height;
+    fx.style.visibility = "visible"; front.style.visibility = "hidden"; back.style.visibility = "hidden";
+    const A = front, B = back;
+    (function f(now) {
+      const t = cl((now - t0) / dur);
+      g.clearRect(0, 0, w, h); FX[type](g, A, B, t, w, h, s, o);
+      if (t < 1) requestAnimationFrame(f);
+      else { back.style.visibility = "visible"; fx.style.visibility = "hidden"; res(); }
+    })(t0);
+  });
+}
+
+// ---- per-slide transitions from the JSON exported from a PPTX ----
+let TJ = {};
+const PPT = { cut: "cut", fade: "fade", push: "push", wipe: "wipe", split: "split", uncover: "uncover", cover: "cover", randomBar: "bars", circle: "circle", diamond: "diamond", plus: "plus", flash: "flash", blinds: "blinds", clock: "clock", zoom: "zoom", flip: "flip", cube: "cube", box: "box", gallery: "gallery", switch: "switch", fly: "fly", fallOver: "fall", ferris: "ferris", dissolve: "dissolve", checker: "checker", doors: "doors", drape: "drape", shred: "shred", wind: "wind", fracture: "fracture", ripple: "ripple", vortex: "vortex", origami: "origami", airplane: "airplane", reveal: "reveal" };
+function loadJSON(text) {
+  const d = JSON.parse(text), list = d.slides || [];
+  if (!list.length) throw new Error("no slides");
+  TJ = {};
+  list.forEach(s => {
+    const k = s.effect || s.transition, o = s.options || {};
+    let type = PPT[k] || "fade";
+    if (k === "blinds" && o.dir === "vert") type = "blindsv";
+    TJ[s.slide] = { type, dur: type === "cut" ? 0 : Math.max(100, s.durationMs || 600), o: { dir: o.dir } };
+  });
+  $("jsonOpt").hidden = false; $("tr").value = "json";
+  $("jtxt").textContent = "JSON ✓ " + list.length + " slides";
+}
+$("jfile").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { loadJSON(await f.text()); } catch (err) { alert("Couldn’t read that transitions JSON."); }
+  e.target.value = "";
+};
+
+async function go(n) {
+  if (!doc || busy || n < 1 || n > total || n === cur) return;
+  busy = true;
+  const dir = n > cur ? 1 : -1;
+  let type = $("tr").value, dur = +$("dur").value, o = {};
+  if (type === "json") { // PowerPoint rule: forward uses the entered slide’s effect, backward replays the left slide’s
+    const c = (dir > 0 ? TJ[n] : TJ[cur]) || { type: "fade", dur: 600, o: {} };
+    type = c.type; dur = c.dur; o = c.o;
+  }
+  if (type === "random") type = RANDOM[Math.floor(Math.random() * RANDOM.length)];
+  await renderTo(back, n);
+  const pl = FX[type] ? null : plan(type, dir, front.offsetWidth);
+  if (FX[type]) await runFx(type, dir, dur, o); else back.style.visibility = "visible";
+  if (pl) {
+    const opt = { duration: dur, easing: pl.lin ? "linear" : (pl.ease || E), fill: "both" };
+    back.style.zIndex = pl.outTop ? 1 : 2; front.style.zIndex = pl.outTop ? 2 : 1;
+    const a = front.animate(pl.out, opt), b = back.animate(pl.inn, opt);
+    try { await Promise.all([a.finished, b.finished]); } catch (e) {}
+    a.cancel(); b.cancel();
+  }
+  front.style.visibility = "hidden"; front.style.zIndex = ""; back.style.zIndex = "";
+  [front, back] = [back, front];
+  cur = n; busy = false; updateUI(); resetAuto();
+}
+
+const next = () => go(cur + 1), prev = () => go(cur - 1);
+function resetAuto() {
+  clearInterval(timer);
+  const s = +$("auto").value;
+  if (s && doc) timer = setInterval(() => { cur < total ? next() : go(1); }, s * 1000);
+}
+
+$("file").onchange = e => e.target.files[0] && load(e.target.files[0]);
+$("prev").onclick = prev; $("next").onclick = next;
+$("hPrev").onclick = e => { e.stopPropagation(); prev(); };
+$("hNext").onclick = e => { e.stopPropagation(); next(); };
+$("hExit").onclick = e => { e.stopPropagation(); document.exitFullscreen(); };
+$("auto").onchange = resetAuto;
+$("present").onclick = () => stage.requestFullscreen && stage.requestFullscreen();
+
+document.addEventListener("keydown", e => {
+  if (["ArrowRight","ArrowDown","PageDown"," "].includes(e.key)) { e.preventDefault(); next(); }
+  else if (["ArrowLeft","ArrowUp","PageUp"].includes(e.key)) { e.preventDefault(); prev(); }
+  else if (e.key === "Home") go(1);
+  else if (e.key === "End") go(total);
+  else if (e.key.toLowerCase() === "f" && doc) { document.fullscreenElement ? document.exitFullscreen() : stage.requestFullscreen(); }
+});
+
+stage.addEventListener("click", e => { if (!doc) return; (e.clientX < stage.getBoundingClientRect().left + stage.clientWidth * 0.25) ? prev() : next(); });
+let tx = null;
+stage.addEventListener("touchstart", e => tx = e.touches[0].clientX, { passive: true });
+stage.addEventListener("touchend", e => { if (tx === null) return; const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) { d < 0 ? next() : prev(); e.preventDefault(); } tx = null; });
+stage.addEventListener("mousemove", () => { stage.classList.add("show"); clearTimeout(hudT); hudT = setTimeout(() => stage.classList.remove("show"), 2000); });
+
+["dragenter","dragover"].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.add("drag"); }));
+["dragleave","drop"].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.remove("drag"); }));
+stage.addEventListener("drop", e => {
+  const f = e.dataTransfer.files[0]; if (!f) return;
+  if (/\.json$/i.test(f.name)) f.text().then(loadJSON).catch(() => alert("Couldn’t read that transitions JSON."));
+  else if (f.type === "application/pdf") load(f);
+});
+
+let rz; const rerender = () => { clearTimeout(rz); rz = setTimeout(async () => { if (doc && !busy) await renderTo(front, cur); }, 150); };
+window.addEventListener("resize", rerender);
+document.addEventListener("fullscreenchange", rerender);
+updateUI();
+</script>
+</body>
+</html>

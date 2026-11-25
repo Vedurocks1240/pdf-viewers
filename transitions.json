@@ -1,0 +1,243 @@
+{
+  "source": "Electronic_Spreadsheet_Calc.pptx",
+  "slideCount": 15,
+  "slides": [
+    {
+      "slide": 1,
+      "transition": "vortex",
+      "namespace": "main",
+      "options": {
+        "dir": "r"
+      },
+      "durationMs": 4000,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "vortex",
+      "name": "Vortex",
+      "viewerEquivalent": "vortex",
+      "exactInViewer": true
+    },
+    {
+      "slide": 2,
+      "transition": "prstTrans",
+      "namespace": "main",
+      "options": {
+        "prst": "airplane"
+      },
+      "durationMs": 1250,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "airplane",
+      "name": "Airplane",
+      "viewerEquivalent": "airplane",
+      "exactInViewer": true
+    },
+    {
+      "slide": 3,
+      "transition": "prstTrans",
+      "namespace": "main",
+      "options": {
+        "prst": "origami"
+      },
+      "durationMs": 3250,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "origami",
+      "name": "Origami",
+      "viewerEquivalent": "origami",
+      "exactInViewer": true
+    },
+    {
+      "slide": 4,
+      "transition": "prstTrans",
+      "namespace": "main",
+      "options": {
+        "prst": "wind"
+      },
+      "durationMs": 2000,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "wind",
+      "name": "Wind",
+      "viewerEquivalent": "wind",
+      "exactInViewer": true
+    },
+    {
+      "slide": 5,
+      "transition": "reveal",
+      "namespace": "main",
+      "durationMs": 3400,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "reveal",
+      "name": "Reveal",
+      "viewerEquivalent": "reveal",
+      "exactInViewer": true
+    },
+    {
+      "slide": 6,
+      "transition": "dissolve",
+      "namespace": "main",
+      "durationMs": 1200,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "dissolve",
+      "name": "Dissolve",
+      "viewerEquivalent": "dissolve",
+      "exactInViewer": true
+    },
+    {
+      "slide": 7,
+      "transition": "checker",
+      "namespace": "main",
+      "durationMs": 2500,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "checker",
+      "name": "Checkerboard",
+      "viewerEquivalent": "checker",
+      "exactInViewer": true
+    },
+    {
+      "slide": 8,
+      "transition": "prstTrans",
+      "namespace": "main",
+      "options": {
+        "prst": "fallOver"
+      },
+      "durationMs": 2000,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "fallOver",
+      "name": "Fall Over",
+      "viewerEquivalent": "fall",
+      "exactInViewer": true
+    },
+    {
+      "slide": 9,
+      "transition": "ripple",
+      "namespace": "main",
+      "durationMs": 1400,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "ripple",
+      "name": "Ripple",
+      "viewerEquivalent": "ripple",
+      "exactInViewer": true
+    },
+    {
+      "slide": 10,
+      "transition": "blinds",
+      "namespace": "main",
+      "options": {
+        "dir": "vert"
+      },
+      "durationMs": 1600,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "blinds",
+      "name": "Blinds",
+      "viewerEquivalent": "blindsv",
+      "exactInViewer": true
+    },
+    {
+      "slide": 11,
+      "transition": "doors",
+      "namespace": "main",
+      "options": {
+        "dir": "vert"
+      },
+      "durationMs": 1400,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "doors",
+      "name": "Doors",
+      "viewerEquivalent": "doors",
+      "exactInViewer": true
+    },
+    {
+      "slide": 12,
+      "transition": "cut",
+      "namespace": "main",
+      "durationMs": 0,
+      "speed": null,
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "cut",
+      "name": "Cut",
+      "viewerEquivalent": "cut",
+      "exactInViewer": true
+    },
+    {
+      "slide": 13,
+      "transition": "prstTrans",
+      "namespace": "main",
+      "options": {
+        "prst": "fracture"
+      },
+      "durationMs": 2000,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "fracture",
+      "name": "Fracture",
+      "viewerEquivalent": "fracture",
+      "exactInViewer": true
+    },
+    {
+      "slide": 14,
+      "transition": "prstTrans",
+      "namespace": "main",
+      "options": {
+        "prst": "drape"
+      },
+      "durationMs": 2000,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "drape",
+      "name": "Drape",
+      "viewerEquivalent": "drape",
+      "exactInViewer": true
+    },
+    {
+      "slide": 15,
+      "transition": "shred",
+      "namespace": "main",
+      "durationMs": 3000,
+      "speed": "slow",
+      "advanceOnClick": true,
+      "advanceAfterMs": null,
+      "hasSound": false,
+      "effect": "shred",
+      "name": "Shred",
+      "viewerEquivalent": "shred",
+      "exactInViewer": true
+    }
+  ]
+}
